@@ -31,7 +31,6 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
         <p className="text-zinc-500 text-sm mb-8">Welcome back, {session.businessName}</p>
 
-        {/* WA Status */}
         <div className={`mb-6 p-4 rounded-xl border flex items-center gap-3 ${isConnected ? 'bg-green-950 border-green-800' : 'bg-zinc-900 border-zinc-700'}`}>
           <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-[#25D366] animate-pulse' : 'bg-zinc-600'}`}/>
           <div>
@@ -43,7 +42,6 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
             { label: 'Total Contacts', value: contacts || 0, color: 'text-white' },

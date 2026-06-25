@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import AdminSidebar from '@/components/AdminSidebar'
 import Link from 'next/link'
