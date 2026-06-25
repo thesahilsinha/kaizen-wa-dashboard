@@ -2,15 +2,15 @@ import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import ClientSidebar from '@/components/ClientSidebar'
 
-function getSession() {
-  const cookieStore = cookies()
+async function getSession() {
+  const cookieStore = await cookies()
   const raw = cookieStore.get('ka_session')?.value
   if (!raw) return null
   return JSON.parse(decodeURIComponent(raw))
 }
 
 export default async function DashboardPage() {
-  const session = getSession()
+  const session = await getSession()
   if (!session) return null
 
   const supabase = createClient(session.supabaseUrl, session.supabaseAnonKey)
