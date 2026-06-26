@@ -3,19 +3,29 @@ import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   const body = await req.json()
+
+  // Must use service key for admin auth operations
   const supabase = createClient(
     process.env.NEXT_PUBLIC_MASTER_SUPABASE_URL!,
-    process.env.MASTER_SUPABASE_SERVICE_KEY!
+    process.env.MASTER_SUPABASE_SERVICE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
   )
 
-  // Create auth user for client
+  // Create auth user
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email: body.login_email,
     password: 'Kaizen@2024',
     email_confirm: true
   })
 
-  if (authError) return NextResponse.json({ error: authError.message }, { status: 400 })
+  if (authError) {
+    return NextResponse.json({ error: authError.message }, { status: 400 })
+  }
 
   // Insert into master_clients
   const { error } = await supabase.from('master_clients').insert({
@@ -34,6 +44,9 @@ export async function POST(req: Request) {
     is_active: true
   })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 })
+  }
+
   return NextResponse.json({ success: true })
 }
