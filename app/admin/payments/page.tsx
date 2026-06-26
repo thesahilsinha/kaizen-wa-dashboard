@@ -2,68 +2,64 @@ import { createClient } from '@supabase/supabase-js'
 import AdminSidebar from '@/components/AdminSidebar'
 
 export default async function PaymentsPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_MASTER_SUPABASE_URL!,
-    process.env.MASTER_SUPABASE_SERVICE_KEY!
-  )
-  const { data: clients } = await supabase
-    .from('master_clients')
-    .select('*')
-    .order('next_renewal', { ascending: true })
+  const supabase = createClient(process.env.NEXT_PUBLIC_MASTER_SUPABASE_URL!, process.env.MASTER_SUPABASE_SERVICE_KEY!)
+  const { data: clients } = await supabase.from('master_clients').select('*').order('next_renewal', { ascending: true })
 
-  const totalMonthly = clients?.reduce((sum, c) => sum + (c.monthly_retainer || 0), 0) || 0
+  const totalMonthly = clients?.reduce((s, c) => s + (c.monthly_retainer || 0), 0) || 0
   const overdue = clients?.filter(c => c.payment_status === 'overdue').length || 0
   const due = clients?.filter(c => c.payment_status === 'due').length || 0
 
-  return (
-    <div className="flex min-h-screen">
-      <AdminSidebar />
-      <main className="flex-1 p-8">
-        <h1 className="text-2xl font-bold mb-2">Payments & Renewals</h1>
-        <p className="text-zinc-500 text-sm mb-8">Track all client billing</p>
+  const pg: React.CSSProperties = { display: 'flex', minHeight: '100vh', background: 'var(--bg)' }
+  const main: React.CSSProperties = { flex: 1, minWidth: 0, padding: '72px 24px 24px' }
+  const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12 }
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-[#111] border border-zinc-800 rounded-xl p-5">
-            <div className="text-[#25D366] text-2xl font-bold font-mono">₹{totalMonthly.toLocaleString()}</div>
-            <div className="text-zinc-500 text-xs font-mono mt-1">Monthly Recurring</div>
-          </div>
-          <div className="bg-[#111] border border-zinc-800 rounded-xl p-5">
-            <div className="text-yellow-400 text-2xl font-bold font-mono">{due}</div>
-            <div className="text-zinc-500 text-xs font-mono mt-1">Payments Due</div>
-          </div>
-          <div className="bg-[#111] border border-zinc-800 rounded-xl p-5">
-            <div className="text-red-400 text-2xl font-bold font-mono">{overdue}</div>
-            <div className="text-zinc-500 text-xs font-mono mt-1">Overdue</div>
-          </div>
+  return (
+    <div style={pg}>
+      <AdminSidebar />
+      <main style={main} className="md:!pt-8">
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)' }}>Payments & Renewals</h1>
+          <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>Track all client billing</p>
         </div>
 
-        <div className="bg-[#111] border border-zinc-800 rounded-xl overflow-hidden">
-          <table className="w-full">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
+          {[
+            { label: 'Monthly Recurring', value: `₹${totalMonthly.toLocaleString()}`, color: '#16a34a' },
+            { label: 'Due', value: due, color: '#d97706' },
+            { label: 'Overdue', value: overdue, color: '#dc2626' },
+          ].map(s => (
+            <div key={s.label} style={{ ...card, padding: '16px 20px' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'monospace', color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ ...card, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="border-b border-zinc-800 text-zinc-500 text-xs font-mono uppercase">
-                <th className="text-left p-4">Client</th>
-                <th className="text-left p-4">Monthly</th>
-                <th className="text-left p-4">Billing Day</th>
-                <th className="text-left p-4">Next Renewal</th>
-                <th className="text-left p-4">Status</th>
+              <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                {['Client', 'Monthly', 'Billing Day', 'Next Renewal', 'Status'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '12px 16px', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)' }}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {clients?.map(client => (
-                <tr key={client.id} className="border-b border-zinc-900 hover:bg-zinc-900/30">
-                  <td className="p-4">
-                    <div className="font-medium text-sm">{client.business_name}</div>
-                    <div className="text-zinc-600 text-xs">{client.login_email}</div>
+                <tr key={client.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '12px 16px' }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{client.business_name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{client.login_email}</div>
                   </td>
-                  <td className="p-4 font-mono text-sm text-[#25D366]">₹{client.monthly_retainer}</td>
-                  <td className="p-4 font-mono text-sm text-zinc-400">{client.billing_day}th</td>
-                  <td className="p-4 font-mono text-sm text-zinc-400">{client.next_renewal || '—'}</td>
-                  <td className="p-4">
-                    <span className={`text-xs font-mono px-2 py-1 rounded-full ${
-                      client.payment_status === 'paid' ? 'bg-green-900 text-green-400' :
-                      client.payment_status === 'due' ? 'bg-yellow-900 text-yellow-400' :
-                      'bg-red-900 text-red-400'
-                    }`}>{client.payment_status}</span>
+                  <td style={{ padding: '12px 16px', fontSize: 13, fontFamily: 'monospace', color: '#16a34a', fontWeight: 600 }}>₹{client.monthly_retainer}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--muted)' }}>{client.billing_day}th</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--muted)' }}>{client.next_renewal || '—'}</td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 100,
+                      background: client.payment_status === 'paid' ? '#dcfce7' : client.payment_status === 'due' ? '#fef9c3' : '#fee2e2',
+                      color: client.payment_status === 'paid' ? '#15803d' : client.payment_status === 'due' ? '#a16207' : '#dc2626'
+                    }}>{client.payment_status}</span>
                   </td>
                 </tr>
               ))}

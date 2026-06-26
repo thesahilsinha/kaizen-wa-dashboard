@@ -4,8 +4,7 @@ import ClientSidebar from '@/components/ClientSidebar'
 
 function getSession() {
   const raw = document.cookie.split('; ').find(r => r.startsWith('ka_session='))?.split('=')[1]
-  if (!raw) return null
-  return JSON.parse(decodeURIComponent(raw))
+  return raw ? JSON.parse(decodeURIComponent(raw)) : null
 }
 
 export default function ConversationsPage() {
@@ -15,54 +14,56 @@ export default function ConversationsPage() {
 
   useEffect(() => {
     const s = getSession(); setSession(s)
-    if (s) fetchMessages(s)
+    if (s) {
+      import('@supabase/supabase-js').then(({ createClient }) => {
+        createClient(s.supabaseUrl, s.supabaseAnonKey)
+          .from('messages_log').select('*').order('sent_at', { ascending: false }).limit(100)
+          .then(({ data }) => { setMessages(data || []); setLoading(false) })
+      })
+    }
   }, [])
-
-  async function fetchMessages(s: any) {
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(s.supabaseUrl, s.supabaseAnonKey)
-    const { data } = await supabase.from('messages_log').select('*').order('sent_at', { ascending: false }).limit(100)
-    setMessages(data || []); setLoading(false)
-  }
 
   if (!session) return null
 
-  return (
-    <div className="flex min-h-screen">
-      <ClientSidebar businessName={session.businessName} />
-      <main className="flex-1 p-8">
-        <h1 className="text-2xl font-bold mb-2">Conversations</h1>
-        <p className="text-zinc-500 text-sm mb-6">Last 100 messages</p>
+  const pg: React.CSSProperties = { display: 'flex', minHeight: '100vh', background: 'var(--bg)' }
+  const main: React.CSSProperties = { flex: 1, minWidth: 0, padding: '72px 24px 24px' }
 
-        <div className="bg-[#111] border border-zinc-800 rounded-xl overflow-hidden">
-          <table className="w-full">
+  return (
+    <div style={pg}>
+      <ClientSidebar businessName={session.businessName} />
+      <main style={main} className="md:!pt-8">
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)' }}>Conversations</h1>
+          <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>Last 100 messages</p>
+        </div>
+
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="border-b border-zinc-800 text-zinc-500 text-xs font-mono uppercase">
-                <th className="text-left p-4">Phone</th>
-                <th className="text-left p-4">Direction</th>
-                <th className="text-left p-4">Message</th>
-                <th className="text-left p-4">Source</th>
-                <th className="text-left p-4">Time</th>
+              <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
+                {['Phone', 'Direction', 'Message', 'Source', 'Time'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)' }}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={5} className="p-8 text-center text-zinc-600">Loading...</td></tr>}
+              {loading && <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Loading...</td></tr>}
               {messages.map(msg => (
-                <tr key={msg.id} className="border-b border-zinc-900 hover:bg-zinc-900/30 text-sm">
-                  <td className="p-4 font-mono text-zinc-400">{msg.contact_phone}</td>
-                  <td className="p-4">
-                    <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${msg.direction === 'inbound' ? 'bg-blue-900 text-blue-400' : 'bg-green-900 text-green-400'}`}>
-                      {msg.direction}
-                    </span>
+                <tr key={msg.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '11px 16px', fontSize: 12, fontFamily: 'monospace', color: 'var(--muted)' }}>{msg.contact_phone}</td>
+                  <td style={{ padding: '11px 16px' }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 100,
+                      background: msg.direction === 'inbound' ? '#eff6ff' : '#f0fdf4',
+                      color: msg.direction === 'inbound' ? '#2563eb' : '#15803d'
+                    }}>{msg.direction}</span>
                   </td>
-                  <td className="p-4 text-zinc-300 max-w-xs truncate">{msg.content}</td>
-                  <td className="p-4 text-zinc-600 text-xs font-mono">{msg.source}</td>
-                  <td className="p-4 text-zinc-600 text-xs font-mono">{new Date(msg.sent_at).toLocaleString('en-IN')}</td>
+                  <td style={{ padding: '11px 16px', fontSize: 13, color: 'var(--text)', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.content}</td>
+                  <td style={{ padding: '11px 16px', fontSize: 12, color: 'var(--muted2)', fontFamily: 'monospace' }}>{msg.source}</td>
+                  <td style={{ padding: '11px 16px', fontSize: 12, color: 'var(--muted2)' }}>{new Date(msg.sent_at).toLocaleString('en-IN')}</td>
                 </tr>
               ))}
-              {!loading && messages.length === 0 && (
-                <tr><td colSpan={5} className="p-8 text-center text-zinc-600">No messages yet</td></tr>
-              )}
+              {!loading && messages.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No messages yet</td></tr>}
             </tbody>
           </table>
         </div>

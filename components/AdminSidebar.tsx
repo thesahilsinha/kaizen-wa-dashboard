@@ -5,9 +5,9 @@ import { useState } from 'react'
 import { useTheme } from './ThemeProvider'
 
 const links = [
-  { href: '/admin', label: 'All Clients', icon: '◎' },
-  { href: '/admin/add-client', label: 'Add Client', icon: '⊕' },
-  { href: '/admin/payments', label: 'Payments', icon: '◈' },
+  { href: '/admin', label: 'All Clients', icon: '👥' },
+  { href: '/admin/add-client', label: 'Add Client', icon: '➕' },
+  { href: '/admin/payments', label: 'Payments', icon: '💰' },
 ]
 
 export default function AdminSidebar() {
@@ -21,54 +21,72 @@ export default function AdminSidebar() {
     router.push('/login')
   }
 
-  const NavContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="px-5 py-5 border-b border-white/5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-[#25D366] flex items-center justify-center text-black text-xs font-bold">K</div>
+  const NavLinks = () => (
+    <>
+      {links.map(link => {
+        const active = pathname === link.href
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            onClick={() => setOpen(false)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: active ? 600 : 400,
+              color: active ? '#25D366' : 'rgba(255,255,255,0.5)',
+              background: active ? 'rgba(37,211,102,0.08)' : 'transparent',
+              textDecoration: 'none',
+              transition: 'all 0.15s',
+              marginBottom: '2px',
+            }}
+          >
+            <span>{link.icon}</span>
+            <span>{link.label}</span>
+            {active && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#25D366', display: 'inline-block' }} />}
+          </Link>
+        )
+      })}
+    </>
+  )
+
+  const SidebarContent = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Brand */}
+      <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 700, fontSize: 14 }}>K</div>
           <div>
-            <div className="text-white text-sm font-semibold">Kaizen WA 360</div>
-            <div className="text-white/30 text-[11px]">Super Admin</div>
+            <div style={{ color: '#fff', fontWeight: 600, fontSize: 13 }}>Kaizen WA 360</div>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>Super Admin</div>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 px-2 py-3 space-y-0.5">
-        <div className="px-3 py-2 text-[10px] font-semibold tracking-widest text-white/20 uppercase">Admin</div>
-        {links.map(link => {
-          const active = pathname === link.href
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all ${
-                active
-                  ? 'bg-[#25D366]/10 text-[#25D366] font-medium'
-                  : 'text-white/40 hover:text-white/80 hover:bg-white/5'
-              }`}
-            >
-              <span className="text-base w-4 text-center">{link.icon}</span>
-              <span>{link.label}</span>
-              {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#25D366]" />}
-            </Link>
-          )
-        })}
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '12px 8px' }}>
+        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>Admin</div>
+        <NavLinks />
       </nav>
 
-      <div className="px-2 py-3 border-t border-white/5 space-y-1">
+      {/* Bottom */}
+      <div style={{ padding: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <button
           onClick={toggle}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] text-white/40 hover:text-white/80 hover:bg-white/5 transition-all w-full"
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, fontSize: 13, color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', width: '100%', marginBottom: 2 }}
         >
-          <span className="text-base w-4 text-center">{dark ? '○' : '●'}</span>
+          <span>{dark ? '☀️' : '🌙'}</span>
           <span>{dark ? 'Light mode' : 'Dark mode'}</span>
         </button>
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] text-white/40 hover:text-red-400 hover:bg-red-500/5 transition-all w-full"
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, fontSize: 13, color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}
         >
-          <span className="text-base w-4 text-center">→</span>
+          <span>→</span>
           <span>Logout</span>
         </button>
       </div>
@@ -77,31 +95,33 @@ export default function AdminSidebar() {
 
   return (
     <>
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-[#0f172a] border-b border-white/5 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-[#25D366] flex items-center justify-center text-black text-xs font-bold">K</div>
-          <span className="text-white text-sm font-semibold">Kaizen WA 360</span>
+      {/* Mobile topbar */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, height: 56, background: '#0f172a', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px' }} className="md:hidden">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 6, background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 700, fontSize: 12 }}>K</div>
+          <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>Kaizen WA 360</span>
         </div>
-        <button onClick={() => setOpen(!open)} className="text-white/50 hover:text-white p-1">
+        <button onClick={() => setOpen(!open)} style={{ color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>
           {open ? '✕' : '☰'}
         </button>
       </div>
 
+      {/* Mobile drawer */}
       {open && (
-        <div className="md:hidden fixed inset-0 z-40" onClick={() => setOpen(false)}>
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="absolute left-0 top-0 bottom-0 w-56 bg-[#0f172a] pt-14 z-50" onClick={e => e.stopPropagation()}>
-            <NavContent />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setOpen(false)}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />
+          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 220, background: '#0f172a', paddingTop: 56, zIndex: 50 }} onClick={e => e.stopPropagation()}>
+            <SidebarContent />
           </div>
         </div>
       )}
 
-      <div className="hidden md:flex w-56 min-h-screen bg-[#0f172a] flex-col fixed left-0 top-0 bottom-0 z-30">
-        <NavContent />
+      {/* Desktop sidebar */}
+      <div className="hidden md:block" style={{ width: 220, minHeight: '100vh', background: '#0f172a', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 30 }}>
+        <SidebarContent />
       </div>
-
-      <div className="hidden md:block w-56 flex-shrink-0" />
-      <div className="md:hidden h-14 flex-shrink-0" />
+      <div className="hidden md:block" style={{ width: 220, flexShrink: 0 }} />
+      <div className="md:hidden" style={{ height: 56, flexShrink: 0 }} />
     </>
   )
 }

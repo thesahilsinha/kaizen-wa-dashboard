@@ -29,117 +29,83 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     const { data, error: err } = await masterSupabase.auth.signInWithPassword({ email, password })
-    if (err || !data.user) {
-      setError('Invalid email or password')
-      setLoading(false)
-      return
-    }
+    if (err || !data.user) { setError('Invalid email or password'); setLoading(false); return }
     const { data: client } = await masterSupabase
       .from('master_clients')
       .select('id, business_name, supabase_url, supabase_anon_key')
       .eq('login_email', email)
       .eq('is_active', true)
       .single()
-
-    if (!client) {
-      setError('Account not found or inactive')
-      setLoading(false)
-      return
-    }
-
+    if (!client) { setError('Account not found or inactive'); setLoading(false); return }
     const session = JSON.stringify({
-      role: 'client',
-      clientId: client.id,
-      businessName: client.business_name,
-      supabaseUrl: client.supabase_url,
-      supabaseAnonKey: client.supabase_anon_key
+      role: 'client', clientId: client.id, businessName: client.business_name,
+      supabaseUrl: client.supabase_url, supabaseAnonKey: client.supabase_anon_key
     })
     document.cookie = `ka_session=${encodeURIComponent(session)}; path=/; max-age=86400`
     router.push('/dashboard')
   }
 
+  const s = {
+    page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'var(--bg)' } as React.CSSProperties,
+    wrap: { width: '100%', maxWidth: 380 } as React.CSSProperties,
+    card: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 } as React.CSSProperties,
+    input: { width: '100%', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', fontSize: 14, color: 'var(--text)', outline: 'none', display: 'block' } as React.CSSProperties,
+    btn: { width: '100%', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 8, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer' } as React.CSSProperties,
+    optionCard: { width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', marginBottom: 8, textAlign: 'left' as const },
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg)' }}>
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-[#25D366] flex items-center justify-center text-black font-bold text-xl mx-auto mb-4">W</div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Kaizen WA 360</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>WhatsApp Automation Platform</p>
+    <div style={s.page}>
+      <div style={s.wrap}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 700, fontSize: 22, margin: '0 auto 14px' }}>W</div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Kaizen WA 360</h1>
+          <p style={{ fontSize: 13, color: 'var(--muted)' }}>WhatsApp Automation Platform</p>
         </div>
 
         {mode === 'select' && (
-          <div className="space-y-3">
-            <button
-              onClick={() => setMode('admin')}
-              className="w-full card card-hover p-4 text-left transition-all flex items-center gap-4"
-            >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: 'var(--surface2)' }}>👑</div>
+          <div>
+            <button style={s.optionCard} onClick={() => setMode('admin')}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👑</div>
               <div>
-                <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Admin access</div>
-                <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Kaizen ASC internal</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Admin access</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Kaizen ASC internal</div>
               </div>
             </button>
-            <button
-              onClick={() => setMode('client')}
-              className="w-full card card-hover p-4 text-left transition-all flex items-center gap-4"
-            >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: 'var(--surface2)' }}>📱</div>
+            <button style={s.optionCard} onClick={() => setMode('client')}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📱</div>
               <div>
-                <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Client login</div>
-                <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Access your dashboard</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Client login</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Access your dashboard</div>
               </div>
             </button>
           </div>
         )}
 
         {mode === 'admin' && (
-          <div className="card p-6">
-            <button onClick={() => setMode('select')} className="text-xs mb-5 flex items-center gap-1" style={{ color: 'var(--muted)' }}>← Back</button>
-            <h2 className="font-semibold mb-1" style={{ color: 'var(--text)' }}>Enter PIN</h2>
-            <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>Admin access only</p>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={pin}
-              onChange={e => setPin(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAdminLogin()}
-              className="mb-3 text-center text-2xl tracking-widest font-mono"
-            />
-            {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
-            <button
-              onClick={handleAdminLogin}
-              disabled={loading}
-              className="w-full py-2.5 rounded-lg text-white text-sm font-semibold disabled:opacity-50 transition-all"
-              style={{ background: 'var(--green)' }}
-            >
-              {loading ? 'Verifying...' : 'Enter'}
-            </button>
+          <div style={s.card}>
+            <button onClick={() => setMode('select')} style={{ color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, marginBottom: 16 }}>← Back</button>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Admin PIN</h2>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>Enter your 8-digit PIN</p>
+            <input type="password" placeholder="••••••••" value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdminLogin()} style={{ ...s.input, textAlign: 'center', fontSize: 20, letterSpacing: 8, marginBottom: 12 }} />
+            {error && <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{error}</p>}
+            <button onClick={handleAdminLogin} disabled={loading} style={s.btn}>{loading ? 'Verifying...' : 'Enter'}</button>
           </div>
         )}
 
         {mode === 'client' && (
-          <div className="card p-6">
-            <button onClick={() => setMode('select')} className="text-xs mb-5 flex items-center gap-1" style={{ color: 'var(--muted)' }}>← Back</button>
-            <h2 className="font-semibold mb-1" style={{ color: 'var(--text)' }}>Client login</h2>
-            <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>Enter your credentials</p>
-            <div className="space-y-3 mb-4">
-              <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
-              <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleClientLogin()} />
-            </div>
-            {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
-            <button
-              onClick={handleClientLogin}
-              disabled={loading}
-              className="w-full py-2.5 rounded-lg text-white text-sm font-semibold disabled:opacity-50 transition-all"
-              style={{ background: 'var(--green)' }}
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
+          <div style={s.card}>
+            <button onClick={() => setMode('select')} style={{ color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, marginBottom: 16 }}>← Back</button>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Client login</h2>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>Enter your credentials</p>
+            <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} style={{ ...s.input, marginBottom: 10 }} />
+            <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleClientLogin()} style={{ ...s.input, marginBottom: 12 }} />
+            {error && <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{error}</p>}
+            <button onClick={handleClientLogin} disabled={loading} style={s.btn}>{loading ? 'Signing in...' : 'Sign in'}</button>
           </div>
         )}
 
-        <p className="text-center text-xs mt-6" style={{ color: 'var(--muted2)' }}>Powered by Kaizen ASC</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted2)', marginTop: 24 }}>Powered by Kaizen ASC</p>
       </div>
     </div>
   )

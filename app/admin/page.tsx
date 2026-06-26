@@ -9,69 +9,63 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchClients() {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_MASTER_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_MASTER_SUPABASE_ANON_KEY!
-      )
-      const { data, error } = await supabase
-        .from('master_clients')
-        .select('*')
-        .order('onboarded_at', { ascending: false })
-      console.log('clients:', data, 'error:', error)
-      setClients(data || [])
-      setLoading(false)
-    }
-    fetchClients()
+    createClient(process.env.NEXT_PUBLIC_MASTER_SUPABASE_URL!, process.env.NEXT_PUBLIC_MASTER_SUPABASE_ANON_KEY!)
+      .from('master_clients').select('*').order('onboarded_at', { ascending: false })
+      .then(({ data }) => { setClients(data || []); setLoading(false) })
   }, [])
 
+  const pg: React.CSSProperties = { display: 'flex', minHeight: '100vh', background: 'var(--bg)' }
+  const main: React.CSSProperties = { flex: 1, minWidth: 0, padding: '72px 24px 24px' }
+  const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', marginBottom: 10 }
+
   return (
-    <div className="flex min-h-screen">
+    <div style={pg}>
       <AdminSidebar />
-      <main className="flex-1 p-8">
-        <div className="flex items-center justify-between mb-8">
+      <main style={main} className="md:!pt-8">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
-            <h1 className="text-2xl font-bold">All Clients</h1>
-            <p className="text-zinc-500 text-sm mt-1">{clients.length} total clients</p>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)' }}>All Clients</h1>
+            <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>{clients.length} total clients</p>
           </div>
-          <Link href="/admin/add-client" className="bg-[#25D366] hover:bg-[#1fb855] text-black font-bold px-4 py-2 rounded-lg text-sm transition-all">
+          <Link href="/admin/add-client" style={{ background: '#25D366', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
             + Add Client
           </Link>
         </div>
 
-        {loading && <div className="text-zinc-600 text-center py-16">Loading...</div>}
+        {loading && <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)', fontSize: 14 }}>Loading...</div>}
 
-        <div className="grid gap-3">
-          {clients.map(client => (
-            <div key={client.id} className="bg-[#111] border border-zinc-800 rounded-xl p-5 flex items-center justify-between">
+        {clients.map(client => (
+          <div key={client.id} style={card}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <div>
-                <div className="font-semibold">{client.business_name}</div>
-                <div className="text-zinc-500 text-sm font-mono mt-1">{client.login_email}</div>
-                {client.notes && <div className="text-zinc-600 text-xs mt-1">{client.notes}</div>}
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{client.business_name}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3, fontFamily: 'monospace' }}>{client.login_email}</div>
+                {client.notes && <div style={{ fontSize: 11, color: 'var(--muted2)', marginTop: 3 }}>{client.notes}</div>}
               </div>
-              <div className="flex items-center gap-6 text-right">
-                <div>
-                  <div className="text-[#25D366] font-bold font-mono">₹{client.monthly_retainer}/mo</div>
-                  <div className="text-zinc-600 text-xs">Setup: ₹{client.setup_fee}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#16a34a', fontFamily: 'monospace' }}>₹{client.monthly_retainer}/mo</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>Setup: ₹{client.setup_fee}</div>
                 </div>
-                <div>
-                  <span className={`text-xs font-mono px-2 py-1 rounded-full ${
-                    client.payment_status === 'paid' ? 'bg-green-900 text-green-400' :
-                    client.payment_status === 'due' ? 'bg-yellow-900 text-yellow-400' :
-                    'bg-red-900 text-red-400'
-                  }`}>{client.payment_status}</span>
-                  <div className="text-zinc-600 text-xs mt-1">{client.next_renewal ? `Renews ${client.next_renewal}` : 'No renewal set'}</div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 100,
+                    background: client.payment_status === 'paid' ? '#dcfce7' : client.payment_status === 'due' ? '#fef9c3' : '#fee2e2',
+                    color: client.payment_status === 'paid' ? '#15803d' : client.payment_status === 'due' ? '#a16207' : '#dc2626'
+                  }}>{client.payment_status}</span>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{client.next_renewal ? `Renews ${client.next_renewal}` : '—'}</div>
                 </div>
-                <div className={`w-2 h-2 rounded-full ${client.is_active ? 'bg-[#25D366]' : 'bg-zinc-600'}`} />
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: client.is_active ? '#22c55e' : '#71717a', flexShrink: 0 }} />
               </div>
             </div>
-          ))}
-          {!loading && clients.length === 0 && (
-            <div className="text-center py-16 text-zinc-600">
-              No clients yet. <Link href="/admin/add-client" className="text-[#25D366]">Add your first client →</Link>
-            </div>
-          )}
-        </div>
+          </div>
+        ))}
+
+        {!loading && clients.length === 0 && (
+          <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)', fontSize: 14 }}>
+            No clients yet. <Link href="/admin/add-client" style={{ color: '#16a34a', fontWeight: 600 }}>Add your first client →</Link>
+          </div>
+        )}
       </main>
     </div>
   )

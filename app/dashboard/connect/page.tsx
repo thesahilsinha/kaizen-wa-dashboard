@@ -7,8 +7,7 @@ const QRModal = dynamic(() => import('@/components/QRModal'), { ssr: false })
 
 function getSession() {
   const raw = document.cookie.split('; ').find(r => r.startsWith('ka_session='))?.split('=')[1]
-  if (!raw) return null
-  return JSON.parse(decodeURIComponent(raw))
+  return raw ? JSON.parse(decodeURIComponent(raw)) : null
 }
 
 export default function ConnectPage() {
@@ -24,60 +23,58 @@ export default function ConnectPage() {
 
   async function fetchStatus(s: any) {
     const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(s.supabaseUrl, s.supabaseAnonKey)
-    const { data } = await supabase.from('wa_sessions').select('*').eq('session_id', s.clientId).single()
+    const { data } = await createClient(s.supabaseUrl, s.supabaseAnonKey)
+      .from('wa_sessions').select('*').eq('session_id', s.clientId).single()
     setWaStatus(data); setLoading(false)
   }
 
   if (!session) return null
   const isConnected = waStatus?.status === 'connected'
 
-  return (
-    <div className="flex min-h-screen">
-      <ClientSidebar businessName={session.businessName} />
-      <main className="flex-1 p-8 flex flex-col items-center justify-center">
-        <div className="max-w-md w-full">
-          <h1 className="text-2xl font-bold mb-2 text-center">WhatsApp Connection</h1>
-          <p className="text-zinc-500 text-sm mb-8 text-center">Connect your WhatsApp number to start automating</p>
+  const pg: React.CSSProperties = { display: 'flex', minHeight: '100vh', background: 'var(--bg)' }
+  const main: React.CSSProperties = { flex: 1, minWidth: 0, padding: '72px 24px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }
 
-          {!loading && isConnected && (
-            <div className="bg-green-950 border border-green-800 rounded-2xl p-8 text-center">
-              <div className="text-5xl mb-4">✅</div>
-              <div className="font-bold text-lg text-green-400">Connected</div>
-              <div className="text-zinc-400 text-sm mt-2 font-mono">{waStatus?.wa_number}</div>
-              <div className="text-zinc-600 text-xs mt-1">Last seen: {waStatus?.last_seen ? new Date(waStatus.last_seen).toLocaleString('en-IN') : 'Unknown'}</div>
-              <button
-                onClick={() => { setShowQR(true); setWaStatus(null) }}
-                className="mt-6 text-xs text-zinc-500 hover:text-red-400 transition-all"
-              >
+  return (
+    <div style={pg}>
+      <ClientSidebar businessName={session.businessName} />
+      <main style={main} className="md:!pt-0">
+        <div style={{ width: '100%', maxWidth: 440 }}>
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)' }}>WhatsApp Connection</h1>
+            <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>Connect your number to start automating</p>
+          </div>
+
+          {loading && <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 13, padding: 40 }}>Checking connection...</div>}
+
+          {!loading && isConnected && !showQR && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 16, padding: 32, textAlign: 'center' }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#15803d', marginBottom: 4 }}>Connected</div>
+              <div style={{ fontSize: 13, color: '#16a34a', fontFamily: 'monospace' }}>{waStatus?.wa_number}</div>
+              <div style={{ fontSize: 12, color: '#4ade80', marginTop: 4 }}>
+                Last seen: {waStatus?.last_seen ? new Date(waStatus.last_seen).toLocaleString('en-IN') : 'Unknown'}
+              </div>
+              <button onClick={() => { setShowQR(true); setWaStatus(null) }} style={{ marginTop: 20, background: 'none', border: 'none', color: '#6b7280', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
                 Reconnect with different number
               </button>
             </div>
           )}
 
           {!loading && !isConnected && !showQR && (
-            <div className="bg-[#111] border border-zinc-800 rounded-2xl p-8 text-center">
-              <div className="text-5xl mb-4">📱</div>
-              <div className="font-bold text-lg mb-2">Not Connected</div>
-              <p className="text-zinc-500 text-sm mb-6">Scan a QR code with WhatsApp to connect your number. You only need to do this once.</p>
-              <button
-                onClick={() => setShowQR(true)}
-                className="bg-[#25D366] hover:bg-[#1fb855] text-black font-bold px-6 py-3 rounded-xl transition-all"
-              >
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>📱</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Not Connected</div>
+              <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 24, lineHeight: 1.6 }}>
+                Scan a QR code with WhatsApp to connect your number. You only need to do this once.
+              </p>
+              <button onClick={() => setShowQR(true)} style={{ background: '#25D366', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Connect WhatsApp
               </button>
             </div>
           )}
 
           {showQR && (
-            <QRModal
-              clientId={session.clientId}
-              onConnected={() => { setShowQR(false); fetchStatus(session) }}
-            />
-          )}
-
-          {loading && (
-            <div className="text-center text-zinc-600 py-16">Checking connection status...</div>
+            <QRModal clientId={session.clientId} onConnected={() => { setShowQR(false); fetchStatus(session) }} />
           )}
         </div>
       </main>
