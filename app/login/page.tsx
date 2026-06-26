@@ -15,7 +15,7 @@ export default function LoginPage() {
   async function handleAdminLogin() {
     setLoading(true)
     setError('')
-    if (pin !== process.env.NEXT_PUBLIC_ADMIN_PIN && pin !== '27082003') {
+    if (pin !== '27082003') {
       setError('Invalid PIN')
       setLoading(false)
       return
@@ -34,7 +34,6 @@ export default function LoginPage() {
       setLoading(false)
       return
     }
-    // Verify client exists in master_clients
     const { data: client } = await masterSupabase
       .from('master_clients')
       .select('id, business_name, supabase_url, supabase_anon_key')
@@ -60,51 +59,59 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg)' }}>
+      <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="text-center mb-10">
-          <div className="text-4xl mb-3">🟢</div>
-          <h1 className="text-2xl font-bold font-mono">Kaizen <span className="text-[#25D366]">WA 360</span></h1>
-          <p className="text-zinc-500 text-sm mt-1">WhatsApp Automation Platform</p>
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 rounded-2xl bg-[#25D366] flex items-center justify-center text-black font-bold text-xl mx-auto mb-4">W</div>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Kaizen WA 360</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>WhatsApp Automation Platform</p>
         </div>
 
         {mode === 'select' && (
           <div className="space-y-3">
             <button
               onClick={() => setMode('admin')}
-              className="w-full bg-[#111] border border-zinc-800 hover:border-[#25D366] text-white rounded-xl p-4 text-left transition-all"
+              className="w-full card card-hover p-4 text-left transition-all flex items-center gap-4"
             >
-              <div className="font-semibold">👑 Admin Login</div>
-              <div className="text-zinc-500 text-sm mt-1">Kaizen ASC internal access</div>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: 'var(--surface2)' }}>👑</div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Admin access</div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Kaizen ASC internal</div>
+              </div>
             </button>
             <button
               onClick={() => setMode('client')}
-              className="w-full bg-[#111] border border-zinc-800 hover:border-[#25D366] text-white rounded-xl p-4 text-left transition-all"
+              className="w-full card card-hover p-4 text-left transition-all flex items-center gap-4"
             >
-              <div className="font-semibold">📱 Client Login</div>
-              <div className="text-zinc-500 text-sm mt-1">Access your WhatsApp dashboard</div>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: 'var(--surface2)' }}>📱</div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Client login</div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Access your dashboard</div>
+              </div>
             </button>
           </div>
         )}
 
         {mode === 'admin' && (
-          <div className="bg-[#111] border border-zinc-800 rounded-xl p-6">
-            <button onClick={() => setMode('select')} className="text-zinc-500 text-sm mb-4 hover:text-white">← Back</button>
-            <h2 className="font-bold text-lg mb-4">Admin PIN</h2>
+          <div className="card p-6">
+            <button onClick={() => setMode('select')} className="text-xs mb-5 flex items-center gap-1" style={{ color: 'var(--muted)' }}>← Back</button>
+            <h2 className="font-semibold mb-1" style={{ color: 'var(--text)' }}>Enter PIN</h2>
+            <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>Admin access only</p>
             <input
               type="password"
-              placeholder="Enter PIN"
+              placeholder="••••••••"
               value={pin}
               onChange={e => setPin(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAdminLogin()}
-              className="w-full bg-[#0a0a0a] border border-zinc-700 rounded-lg px-4 py-3 text-white font-mono text-xl tracking-widest outline-none focus:border-[#25D366] mb-4"
+              className="mb-3 text-center text-2xl tracking-widest font-mono"
             />
-            {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+            {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
             <button
               onClick={handleAdminLogin}
               disabled={loading}
-              className="w-full bg-[#25D366] hover:bg-[#1fb855] text-black font-bold rounded-lg py-3 transition-all disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg text-white text-sm font-semibold disabled:opacity-50 transition-all"
+              style={{ background: 'var(--green)' }}
             >
               {loading ? 'Verifying...' : 'Enter'}
             </button>
@@ -112,34 +119,27 @@ export default function LoginPage() {
         )}
 
         {mode === 'client' && (
-          <div className="bg-[#111] border border-zinc-800 rounded-xl p-6">
-            <button onClick={() => setMode('select')} className="text-zinc-500 text-sm mb-4 hover:text-white">← Back</button>
-            <h2 className="font-bold text-lg mb-4">Client Login</h2>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-zinc-700 rounded-lg px-4 py-3 text-white outline-none focus:border-[#25D366] mb-3"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleClientLogin()}
-              className="w-full bg-[#0a0a0a] border border-zinc-700 rounded-lg px-4 py-3 text-white outline-none focus:border-[#25D366] mb-4"
-            />
-            {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+          <div className="card p-6">
+            <button onClick={() => setMode('select')} className="text-xs mb-5 flex items-center gap-1" style={{ color: 'var(--muted)' }}>← Back</button>
+            <h2 className="font-semibold mb-1" style={{ color: 'var(--text)' }}>Client login</h2>
+            <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>Enter your credentials</p>
+            <div className="space-y-3 mb-4">
+              <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
+              <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleClientLogin()} />
+            </div>
+            {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
             <button
               onClick={handleClientLogin}
               disabled={loading}
-              className="w-full bg-[#25D366] hover:bg-[#1fb855] text-black font-bold rounded-lg py-3 transition-all disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg text-white text-sm font-semibold disabled:opacity-50 transition-all"
+              style={{ background: 'var(--green)' }}
             >
-              {loading ? 'Signing in...' : 'Login'}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         )}
+
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--muted2)' }}>Powered by Kaizen ASC</p>
       </div>
     </div>
   )
